@@ -44,7 +44,7 @@ namespace MegaSolutionContructor
                 return;
             }
 
-            _solutionFolder = args[0] == "." ? Directory.GetCurrentDirectory() : args[0];
+            _solutionFolder = args[0] == "." ? Directory.GetCurrentDirectory() : new DirectoryInfo(args[0]).FullName;
             _solutionName = args[1];
 
             if (File.Exists(_solutionFilePath))
