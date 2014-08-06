@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using EnvDTE100;
 
 namespace MegaSolutionContructor
@@ -91,6 +93,39 @@ namespace MegaSolutionContructor
                     solution.Close();
                 }
             }
+
+            //removing absolute paths
+            Console.WriteLine("Removing absolute paths");
+
+            var newSln = new StringBuilder();
+
+            var slnLines = File.ReadAllLines(_solutionFilePath);
+            foreach (var l in slnLines)
+            {
+                var toWrite = l;
+
+                if (toWrite.StartsWith("Project("))
+                {
+                    var dc = Regex.Matches(toWrite, "\\.\\.").Count;
+                    if (dc > 0)
+                    {
+                        var si = toWrite.IndexOf("..");
+                        var replaced = toWrite.Replace("..\\", "");
+
+                        for (var i = 0; i < dc; i++)
+                        {
+                            var slashi = replaced.Substring(si).IndexOf("\\");
+                            replaced = replaced.Remove(si, slashi + 1);
+                        }
+
+                        toWrite = replaced;
+                    }
+                }
+
+                newSln.AppendLine(toWrite);
+            }
+
+            File.WriteAllText(_solutionFilePath, newSln.ToString());
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Success");
