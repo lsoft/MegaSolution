@@ -1,4 +1,5 @@
 using System;
+using EnvDTE;
 using EnvDTE100;
 using EnvDTE80;
 
@@ -6,10 +7,10 @@ namespace MegaSolutionContructor
 {
     internal class Root : IFolder
     {
-        private readonly Solution4 _solution;
+        private readonly Solution2 _solution;
 
         public Root(
-            Solution4 solution)
+            Solution2 solution)
         {
             if (solution == null)
             {
