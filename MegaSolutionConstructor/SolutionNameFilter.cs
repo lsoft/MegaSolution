@@ -24,8 +24,9 @@ namespace MegaSolutionContructor
             {
                 throw new ArgumentNullException("negative");
             }
-            _positive = positive;
-            _negative = negative;
+
+            _positive = positive.ConvertAll(j => j.ToLower());
+            _negative = negative.ConvertAll(j => j.ToLower());
         }
 
         public bool IsProjectFile(
