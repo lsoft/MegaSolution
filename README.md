@@ -1,5 +1,5 @@
 MegaSolution
 ============
 
-Small util that scans folders and construct VS sln file with all found csproj.
-It requires VS to be installed on working machine.
+Small util that scans folders and constructs VisualStudio solution(sln) file with all found projects(csproj).
+It requires VisualStudio to be installed on working machine.
