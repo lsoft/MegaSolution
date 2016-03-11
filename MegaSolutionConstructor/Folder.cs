@@ -21,7 +21,8 @@ namespace MegaSolutionContructor
 
         public Folder(
             IFolder parent,
-            string name)
+            string name
+            )
         {
             if (parent == null)
             {

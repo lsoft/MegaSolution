@@ -45,6 +45,8 @@ namespace MegaSolutionContructor
         [STAThread]
         private static void Main(string[] args)
         {
+            Console.Clear();
+
             var extractor = new ArgExtractor(args);
 
             var studioVersionExists = extractor.Exists(StudioVersionKey);
@@ -54,13 +56,24 @@ namespace MegaSolutionContructor
 
             if (!studioVersionExists || !folderExists || !solutionNameExists)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("-studio_version:Версия студии, которую надо открывать (9 - VS 2008, 11 - VS 2012 и т.п.)");
-                Console.WriteLine("-folder:Путь к папке, откуда начать рекурсивно искать проекты. Туда же будет сохранен файл sln");
-                Console.WriteLine("-solution_name:Название солюшена без суффикса .sln");
-                Console.WriteLine("-must:Позитивный фильтр для имени файла проекта. Необязателен. Может быть несколько");
-                Console.WriteLine("-mustnot:Негативный фильтр для имени файла проекта. Необязателен. Может быть несколько");
-                Console.ResetColor();
+                Console.WriteLine(new string('-', 80));
+
+                Console.WriteLine("-studio_version:Версия студии, которую надо открывать (9 - VS 2008, 10 - VS 2010, 11 - VS 2012).");
+                Console.WriteLine("-studio_version:Version of Visual Studio (9 means VS 2008, 10 means 2010, 11 means VS 2012).");
+                
+                Console.WriteLine("-folder:Путь к папке, откуда начать рекурсивно искать проекты. Туда же будет сохранен файл sln.");
+                Console.WriteLine("-folder:Root folder for a projects scanning. Also it's a place to store a constructed solution file.");
+                
+                Console.WriteLine("-solution_name:Название солюшена без суффикса .sln.");
+                Console.WriteLine("-solution_name:Solution file name without .sln extension.");
+                
+                Console.WriteLine("-must:Позитивный фильтр для имени файла проекта. Если нет ни одного позитивного фильтра, в солюшен включаются все проекты. Необязателен. Может быть несколько.");
+                Console.WriteLine("-must:Positive filter to include csproj onto solution. In case of no positive filter exists all csproj are egilible to include. Not necessarily. Allowed to have more than 1 filter.");
+                
+                Console.WriteLine("-mustnot:Негативный фильтр для имени файла проекта. Если фильтр проходит и по позитивному и по негативному фильтра - проект пропускается. Необязателен. Может быть несколько.");
+                Console.WriteLine("-mustnot:Negative filter to skip csproj. In case of a csproj has passed positive filter but not passed negative - that csproj skipped. Not necessarily. Allowed to have more than 1 filter.");
+
+                Console.WriteLine(new string('-', 80));
 
                 return;
             }
@@ -109,56 +122,66 @@ namespace MegaSolutionContructor
 
                 // Cast the instance to DTE2 and assign to variable dte.
                 var dte = (EnvDTE80.DTE2)obj;
-
-                var studioVersionDict = new Dictionary<string, string>();
-                studioVersionDict.Add("8.0", "2005");
-                studioVersionDict.Add("9.0", "2008");
-                studioVersionDict.Add("10.0", "2010");
-                studioVersionDict.Add("11.0", "2012");
-
-                Console.WriteLine(
-                    "Loaded Visual Studio {0} ({1})",
-                    studioVersionDict.ContainsKey(dte.Version) ? studioVersionDict[dte.Version] : string.Empty, 
-                    dte.Version);
-
-                var solution = (Solution2)dte.Solution;
-
                 try
                 {
-                    Console.WriteLine("Scanning...");
 
-                    solution.Create(
-                        _solutionFolder,
-                        _solutionName);
+                    var studioVersionDict = new Dictionary<string, string>();
+                    studioVersionDict.Add("8.0", "2005");
+                    studioVersionDict.Add("9.0", "2008");
+                    studioVersionDict.Add("10.0", "2010");
+                    studioVersionDict.Add("11.0", "2012");
 
-                    var snf = new SolutionNameFilter(
-                        positive,
-                        negative
+                    Console.WriteLine(
+                        "Loaded Visual Studio {0} ({1})",
+                        studioVersionDict.ContainsKey(dte.Version) ? studioVersionDict[dte.Version] : string.Empty,
+                        dte.Version
                         );
 
-                    ScanFoldersForProjects(
-                        _solutionFolder,
-                        snf,
-                        new List<IFolder>
-                        {
-                            new Root(solution)
-                        });
+                    var solution = (Solution2) dte.Solution;
 
-                    solution.SaveAs(_solutionFileName);
+                    try
+                    {
+                        Console.WriteLine("Scanning...");
 
-                }
-                catch (Exception excp)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("ERROR");
-                    Console.WriteLine(excp.GetType().Name);
-                    Console.WriteLine(excp.Message);
-                    Console.WriteLine(excp.StackTrace);
-                    Console.ResetColor();
+                        solution.Create(
+                            _solutionFolder,
+                            _solutionName
+                            );
+
+                        var snf = new SolutionNameFilter(
+                            positive,
+                            negative
+                            );
+
+                        ScanFoldersForProjects(
+                            _solutionFolder,
+                            snf,
+                            new List<IFolder>
+                            {
+                                new Root(solution)
+                            }
+                            );
+
+                        solution.SaveAs(_solutionFileName);
+
+                    }
+                    catch (Exception excp)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("ERROR");
+                        Console.WriteLine(excp.GetType().Name);
+                        Console.WriteLine(excp.Message);
+                        Console.WriteLine(excp.StackTrace);
+                        Console.ResetColor();
+                    }
+                    finally
+                    {
+                        solution.Close();
+                    }
                 }
                 finally
                 {
-                    solution.Close();
+                    dte.Quit();
                 }
             }
 
@@ -217,7 +240,8 @@ namespace MegaSolutionContructor
         private static void ScanFoldersForProjects(
             string currentFolder,
             SolutionNameFilter snf,
-            List<IFolder> folderList)
+            List<IFolder> folderList
+            )
         {
             if (currentFolder == null)
             {
@@ -234,7 +258,8 @@ namespace MegaSolutionContructor
 
             Console.WriteLine(
                 "Scanning {0}",
-                currentFolder);
+                currentFolder
+                );
 
             foreach (var cycleFolder in Directory.GetDirectories(currentFolder))
             {
@@ -262,8 +287,8 @@ namespace MegaSolutionContructor
                     if (snf.IsAllowedToProcess(file))
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("ADDED {0}", file);
-                        Console.ResetColor();
+                        Console.Write("ADDING {0}...", file);
+                        Console.SetCursorPosition(0, Console.CursorTop);
 
                         //файл проекта, годный
 
@@ -274,8 +299,35 @@ namespace MegaSolutionContructor
 
                         toCreate.ForEach(j => j.CreateSolutionFolder());
 
-                        //добавляем проект
-                        toCreate.Last().AddProject(file);
+                        try
+                        {
+                            //добавляем проект
+                            toCreate.Last().AddProject(file);
+
+                            Console.WriteLine("ADDED {0}       ", file);
+                        }
+                        catch (Exception excp)
+                        {
+                            Console.WriteLine();
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Error occured: {0}{1}{2}", excp.Message, Environment.NewLine, excp.StackTrace);
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.WriteLine("Continue? (y/n)");
+                            Console.ResetColor();
+
+                            var r = Console.ReadLine();
+                            if (string.Compare(r, "y", StringComparison.InvariantCultureIgnoreCase) != 0)
+                            {
+                                if (string.Compare(r, "yes", StringComparison.InvariantCultureIgnoreCase) != 0)
+                                {
+                                    throw;
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            Console.ResetColor();
+                        }
                     }
                     else
                     {

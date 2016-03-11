@@ -67,6 +67,7 @@ namespace MegaSolutionContructor
             {
                 allowedToProcees = false;
             }
+
             if (_positive.Count > 0)
             {
                 if(!_positive.All(j => ftl.Contains(j)))
@@ -74,6 +75,7 @@ namespace MegaSolutionContructor
                     allowedToProcees = false;
                 }
             }
+
             if (_negative.Count > 0)
             {
                 if(_negative.Any(j => ftl.Contains(j)))
